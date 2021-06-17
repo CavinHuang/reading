@@ -13,6 +13,6 @@ AppRoutes.forEach(route => router[route.method](route.path, route.action));
 app.use(bodyParser());
 app.use(router.routes());
 app.use(router.allowedMethods());
-app.listen(PORT);
+app.listen(PORT || 8080);
 
-console.log(`应用启动成功 端口:${PORT}`);
+console.log(`应用启动成功 端口:${PORT || 8080}`);
