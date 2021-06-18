@@ -1,8 +1,10 @@
 import fetch from 'node-fetch'
+import ArticleModel from '../model/article'
+const GITHUB_ACCESS_TOKEN = 'MnYbHscyiJoBCd9tqDwXfBaLULrtb71F3Q3bPuUSruzxTeMD21HrAzThLIV0C5W5-cn-n1'
+
 export default class GithubService {
   transformIssue (ctx, next) {
     const { request } = ctx
-    const GITHUB_ACCESS_TOKEN = 'MnYbHscyiJoBCd9tqDwXfBaLULrtb71F3Q3bPuUSruzxTeMD21HrAzThLIV0C5W5-cn-n1'
     const ZENHUB_ACCESS_TOKEN = 'e9d21a5e11f9ca8e5e5048ae385c41593946f7b00f44932038b2b43e565212053bda8609879b40b5'
     const REPO_ID = '377724339'
     // const { GITHUB_ACCESS_TOKEN, ZENHUB_ACCESS_TOKEN } = req.webtaskContext.secrets
@@ -13,21 +15,20 @@ export default class GithubService {
 
     if (action === 'opened') {
         // // 保存数据到 lean
-        // let read = new Read();
-        // // const book = request.payload;
-        // read.set('title', title);
-        // read.set('number', number);
-        // read.set('url', url);
-        // read.set('body', pub.reconvert(body));
-        // read.save().then(function (blog) {
-        //     // 成功保存之后，执行其他逻辑.
-        //     console.log('成功保存:New object created with objectId: ' + read.id);
-        //     // reply(blog);
-        // }, function (error) {
-        //     // 失败之后执行其他逻辑
-        //     console.log('Failed to create new object, with error message: ' + error.message);
-        //     // return reply(Boom.wrap(error, 'error'));
-        // });
+        ArticleModel.save({
+          title,
+          number,
+          url,
+          body
+        }).then(function (blog) {
+            // 成功保存之后，执行其他逻辑.
+            console.log('成功保存:New object created with objectId: ' + blog);
+            // reply(blog);
+        }, function (error) {
+            // 失败之后执行其他逻辑
+            console.log('Failed to create new object, with error message: ' + error.message);
+            // return reply(Boom.wrap(error, 'error'));
+        });
 
         fetch(`${url}?access_token=${GITHUB_ACCESS_TOKEN}`, {
             method: 'PATCH',
@@ -49,5 +50,29 @@ export default class GithubService {
     }
 
     ctx.body = { message: 'issue updated!' }
+  }
+
+  closeIssue (ctx, next) {
+    const GITHUB_ACCESS_TOKEN = '********'
+    const { request } = ctx
+    const words = request.query.title
+    console.log('get words ' + words)
+    ArticleModel.findByTitleOrBody(words, words).then(function (results) {
+      console.log('get results' + JSON.stringify(results))
+      let url = results.url
+      console.log(url)
+
+      fetch(`${url}?access_token=${GITHUB_ACCESS_TOKEN}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ state: 'closed' }),
+      }).then(() => {
+          console.info(`[END] issue closed successful! ${url}`)
+      })
+      .catch(err => console.error(err))
+      ctx.body = { message: 'issue closed!' }
+    }, function (error) {
+      ctx.body = { message: 'error' }
+    });
   }
 }

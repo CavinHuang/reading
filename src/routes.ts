@@ -10,5 +10,9 @@ export default [
     path: '/push',
     method: 'post',
     action: Github.push
+  }, {
+    path: '/readed',
+    method: 'get',
+    action: Github.readed
   }
 ];
